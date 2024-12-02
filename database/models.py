@@ -23,6 +23,7 @@ class UserTask(Base):
     user_id = Column(Integer)
     points = Column(Integer)
     task_id = Column(Integer)
+    result_url = Column(Text)
 
 
 class Task(Base):
