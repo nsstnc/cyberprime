@@ -1,40 +1,37 @@
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import create_engine, delete, Column, Integer, String, Boolean, ForeignKey, Date, inspect, select, Enum
-import enum
+import asyncio
 
-Base = declarative_base()
+from aiogram import Bot, Dispatcher, html
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+from dotenv import load_dotenv
+from os import getenv
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from database.database import db
+import logging
+import sys
 
+load_dotenv()
 
-class TaskType(enum.Enum):
-    PHOTOHUNTING = "photo_hunting"
-    PUZZLE = "puzzle"
-
-
-class User(Base):
-    __tablename__ = 'users'
-    tgid = Column(Integer, primary_key=True)
-    login = Column(String)
-    fraction_id = Column(Integer)
-
-
-class UserTask(Base):
-    __tablename__ = 'users_tasks'
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
-    points = Column(Integer)
-    task_id = Column(Integer)
+# Получить значение токена
+TOKEN = getenv("TOKEN")
+dp = Dispatcher()
 
 
-class Task(Base):
-    __tablename__ = 'tasks'
-    id = Column(Integer, primary_key=True)
-    type = Column(Enum(TaskType))
-    description = Column(String)
-    answer = Column(String)
+@dp.message(CommandStart())
+async def command_start_handler(message: Message) -> None:
+    await message.answer("Привет")
 
 
-class Fraction(Base):
-    __tablename__ = 'fractions'
-    id = Column(Integer, primary_key=True)
-    city_name = Column(Enum(TaskType))
-    fraction_name = Column(String)
+async def main() -> None:
+    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+    # asyncio.create_task(check_and_send_notifications(bot))
+    if not await db.is_exist():
+        await db.initialize()
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    asyncio.run(main())
