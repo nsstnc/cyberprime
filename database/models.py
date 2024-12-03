@@ -38,4 +38,5 @@ class Fraction(Base):
     __tablename__ = 'fractions'
     id = Column(Integer, primary_key=True)
     city_name = Column(String)
+    branch_name = Column(Text)
     fraction_name = Column(String)
