@@ -20,3 +20,13 @@ async def set_floor(callback_query: CallbackQuery):
     fraction = await database.get_fraction_by_id(int(fraction_id))
     await callback_query.message.answer(
         f"Ты вступил в фракцию {fraction.fraction_name}! Теперь ты сражаешься за свою честь и за свой город.")
+
+
+@router.callback_query(lambda c: c.data.startswith("set_branch:"))
+async def set_floor(callback_query: CallbackQuery):
+    await callback_query.answer("Выбрано")
+
+    city_name, user_login = callback_query.data.split(":")[1:]
+
+    await callback_query.message.answer(
+        f"Выбери свой филиал.", reply_markup=await get_branch_select_keyboard(city_name, user_login))

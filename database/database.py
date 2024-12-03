@@ -29,14 +29,43 @@ class Database:
 
         return all(table in table_names for table in expected_tables)
 
-    async def get_fractions(self):
+    # async def get_fractions(self):
+    #     db = await self.get_async_session().__anext__()
+    #     try:
+    #         async with db.begin():
+    #             stmt = select(Fraction)
+    #             result = await db.execute(stmt)
+    #             fractions = result.scalars().all()
+    #             return fractions
+    #
+    #     except SQLAlchemyError as e:
+    #         print(f"Error querying data: {e}")
+    #         return []
+
+    async def get_unique_cities(self):
         db = await self.get_async_session().__anext__()
         try:
             async with db.begin():
-                stmt = select(Fraction)
+                stmt = select(Fraction.city_name, Fraction.id).group_by(Fraction.city_name)
                 result = await db.execute(stmt)
-                fractions = result.scalars().all()
-                return fractions
+                cities = result.all()
+                return cities
+
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
+
+    async def get_branches_by_city_name(self, city_name):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = select(Fraction.branch_name, Fraction.id).filter(Fraction.city_name == city_name)
+                result = await db.execute(stmt)
+                branches = result.all()
+
+                if all(x.branch_name is None for x in branches):
+                    return None
+                return branches
 
         except SQLAlchemyError as e:
             print(f"Error querying data: {e}")
