@@ -130,5 +130,17 @@ class Database:
             print(f"Error querying data: {e}")
             return []
 
+    async def get_all_tasks(self):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = select(Task)
+                result = await db.execute(stmt)
+                tasks = result.scalars().all()
+                return tasks
+
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
 
 database = Database()

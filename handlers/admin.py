@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 import re
 from database.database import database
+from database.models import *
 from config import ADMINS
 from keyboards.admin_keyboards import get_choose_task_type_keyboard
 
@@ -23,6 +24,21 @@ class PuzzleStates(StatesGroup):
 async def start_add_supervisor(message: Message):
     if message.from_user.id in ADMINS:
         await message.answer("Выберите тип задания", reply_markup=await get_choose_task_type_keyboard())
+
+
+@router.message(F.text == "Список заданий")
+async def start_add_supervisor(message: Message):
+    if message.from_user.id in ADMINS:
+        tasks = await database.get_all_tasks()
+        print(tasks)
+        text = "Задания:\n\n"
+        for i in range(len(tasks)):
+            text += (f"{i + 1}. {'Фотоохота' if tasks[i].type == TaskType.PHOTOHUNTING else 'Головоломка'}\n"
+                     f"Описание. {tasks[i].description}\n\n"
+                     f"Правильный ответ: {tasks[i].answer}\n\n"
+                     )
+
+        await message.answer(text)
 
 
 @router.callback_query(lambda c: c.data.startswith("add_photohunting_task:"))

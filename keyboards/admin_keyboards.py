@@ -6,6 +6,7 @@ from database.database import database
 main_admin_buttons = [
     [KeyboardButton(text="Добавить задание")],
     [KeyboardButton(text="Начислить баллы")],
+    [KeyboardButton(text="Список заданий")],
 ]
 main_admin_keyboard = ReplyKeyboardMarkup(keyboard=main_admin_buttons, resize_keyboard=True)
 
