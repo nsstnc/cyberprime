@@ -12,9 +12,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message
 from aiogram.enums import ParseMode
 from dotenv import load_dotenv
-from handlers import user
+from handlers import user, admin
 from config import ADMINS
 from keyboards.user_keyboards import get_city_select_keyboard
+from keyboards.admin_keyboards import main_admin_keyboard
 from database.database import database
 
 load_dotenv()
@@ -24,7 +25,7 @@ TOKEN = getenv("TOKEN")
 
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-dp.include_routers(user.router)
+dp.include_routers(user.router, admin.router)
 
 
 class RegistrationStates(StatesGroup):
@@ -36,7 +37,7 @@ class RegistrationStates(StatesGroup):
 @dp.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     if message.from_user.id in ADMINS:
-        await message.answer("Добро пожаловать, администратор!")
+        await message.answer("Добро пожаловать, администратор!", reply_markup=main_admin_keyboard)
     else:
         await message.answer("Привет, странник! Добро пожаловать в наше приключение!")
         await message.answer("Введи свой логин или номер телефона в системе КиберПрайд:")

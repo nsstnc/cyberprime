@@ -10,7 +10,7 @@ router = Router()
 
 
 @router.callback_query(lambda c: c.data.startswith("set_fraction:"))
-async def set_floor(callback_query: CallbackQuery):
+async def set_fraction(callback_query: CallbackQuery):
     await callback_query.answer("Выбрано")
 
     fraction_id, user_login = callback_query.data.split(":")[1:]
@@ -23,7 +23,7 @@ async def set_floor(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data.startswith("set_branch:"))
-async def set_floor(callback_query: CallbackQuery):
+async def set_branch(callback_query: CallbackQuery):
     await callback_query.answer("Выбрано")
 
     city_name, user_login = callback_query.data.split(":")[1:]

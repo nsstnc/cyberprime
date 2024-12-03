@@ -108,5 +108,27 @@ class Database:
             print(f"Error querying data: {e}")
             return []
 
+    async def add_photohunting_task(self, description):
+        db = await self.get_async_session().__anext__()
+        try:
+            task = Task(type=TaskType.PHOTOHUNTING, description=description)
+            db.add(task)
+            await db.commit()
+        except SQLAlchemyError as e:
+            await db.rollback()
+            print(f"Error querying data: {e}")
+            return []
+
+    async def add_puzzle_task(self, description, answer):
+        db = await self.get_async_session().__anext__()
+        try:
+            task = Task(type=TaskType.PUZZLE, description=description, answer=answer)
+            db.add(task)
+            await db.commit()
+        except SQLAlchemyError as e:
+            await db.rollback()
+            print(f"Error querying data: {e}")
+            return []
+
 
 database = Database()
