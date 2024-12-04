@@ -101,16 +101,12 @@ async def db_init(database: Database):
         result = await db.execute(stmt)
         fractions = result.scalars().all()
 
+    # задаем рандомные типы заданий фракциям на каждый день ивента
     for fraction in fractions:
-        print(fraction)
-        add_fraction_task_type = FractionsTaskTypes(fraction_id=fraction.id,
-                                                    task_type1=random.choice(list(TaskType)).value,
-                                                    task_type2=random.choice(list(TaskType)).value,
-                                                    task_type3=random.choice(list(TaskType)).value,
-                                                    task_type4=random.choice(list(TaskType)).value,
-                                                    task_type5=random.choice(list(TaskType)).value,
-                                                    task_type6=random.choice(list(TaskType)).value,
-                                                    task_type7=random.choice(list(TaskType)).value
-                                                    )
-        db.add(add_fraction_task_type)
+        for day in range(1, 7 + 1):
+            add_fraction_task_type = FractionsTaskTypes(fraction_id=fraction.id,
+                                                        task_type=random.choice(list(TaskType)).value,
+                                                        day=day,
+                                                        )
+            db.add(add_fraction_task_type)
     await db.commit()

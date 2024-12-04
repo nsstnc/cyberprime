@@ -48,13 +48,9 @@ class FractionsTaskTypes(Base):
     __tablename__ = 'fractions_task_types'
     id = Column(Integer, primary_key=True)
     fraction_id = Column(Integer)
-    task_type1 = Column(Enum(TaskType))
-    task_type2 = Column(Enum(TaskType))
-    task_type3 = Column(Enum(TaskType))
-    task_type4 = Column(Enum(TaskType))
-    task_type5 = Column(Enum(TaskType))
-    task_type6 = Column(Enum(TaskType))
-    task_type7 = Column(Enum(TaskType))
+    day = Column(Integer)
+    task_type = Column(Enum(TaskType))
+
 
 
 class EventStart(Base):
