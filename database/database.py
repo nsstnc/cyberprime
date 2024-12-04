@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.exc import SQLAlchemyError
 
 from .models import *
@@ -161,6 +163,30 @@ class Database:
         except SQLAlchemyError as e:
             print(f"Error querying data: {e}")
             return []
+
+    async def set_date_start(self, date_start: datetime.date):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                # Проверяем, есть ли запись в таблице EventStart
+                stmt = select(EventStart).limit(1)
+                result = await db.execute(stmt)
+                existing_date = result.scalars().first()
+
+                if existing_date:
+                    # Если запись существует, обновляем её
+                    existing_date.date_start = date_start
+                else:
+                    # Если записи нет, добавляем новую
+                    date = EventStart(date_start=date_start)
+                    db.add(date)
+
+                # Сохраняем изменения
+                await db.commit()
+
+        except SQLAlchemyError as e:
+            await db.rollback()
+            print(f"Error querying data: {e}")
 
 
 database = Database()

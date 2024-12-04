@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import Router, F
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -20,6 +22,10 @@ class PuzzleStates(StatesGroup):
     waiting_for_answer = State()
 
 
+class DateStates(StatesGroup):
+    waiting_for_date = State()
+
+
 @router.message(F.text == "Добавить задание")
 async def start_add_supervisor(message: Message):
     if message.from_user.id in ADMINS:
@@ -39,6 +45,29 @@ async def start_add_supervisor(message: Message):
                      )
 
         await message.answer(text)
+
+
+@router.message(F.text == "Задать дату старта")
+async def set_date_start(message: Message, state: FSMContext):
+    if message.from_user.id in ADMINS:
+        await message.answer("Введите дату старта ивента в формате дд.мм.гггг")
+        await state.set_state(DateStates.waiting_for_date)
+
+
+@router.message(DateStates.waiting_for_date, F.text)
+async def set_date_start_step(message: Message, state: FSMContext) -> None:
+    date_start_text = message.text.strip()
+    try:
+        # Преобразуем текст в объект datetime.date
+        date_start = datetime.strptime(date_start_text, "%d.%m.%Y").date()
+
+        # Записываем дату в базу данных
+        await database.set_date_start(date_start)
+        await message.answer(f"Дата начала успешно установлена: {date_start_text}")
+        await state.clear()
+    except ValueError:
+        # Если формат неверный, сообщаем пользователю
+        await message.answer("Неверный формат даты. Пожалуйста, введите дату в формате дд.мм.гггг")
 
 
 @router.callback_query(lambda c: c.data.startswith("add_photohunting_task:"))
