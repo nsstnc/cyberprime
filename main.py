@@ -17,6 +17,8 @@ from config import ADMINS
 from keyboards.user_keyboards import get_city_select_keyboard
 from keyboards.admin_keyboards import main_admin_keyboard
 from database.database import database
+from scheduler import scheduler, update_tasks
+from apscheduler.triggers.cron import CronTrigger
 
 load_dotenv()
 
@@ -25,6 +27,7 @@ TOKEN = getenv("TOKEN")
 
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+
 dp.include_routers(user.router, admin.router)
 
 
@@ -62,16 +65,20 @@ async def process_login(message: Message, state: FSMContext) -> None:
 
     await state.clear()
 
+
 from database.db_init import db_init
+
 
 async def main() -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
+    scheduler.start()
+    scheduler.add_job(update_tasks, CronTrigger(hour=0, minute=0))
     # asyncio.create_task(check_and_send_notifications(bot))
     if not await database.is_exist():
         await database.initialize()
     await db_init(database)
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
