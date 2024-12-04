@@ -62,6 +62,7 @@ async def process_login(message: Message, state: FSMContext) -> None:
 
     await state.clear()
 
+from database.db_init import db_init
 
 async def main() -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
@@ -69,8 +70,8 @@ async def main() -> None:
     # asyncio.create_task(check_and_send_notifications(bot))
     if not await database.is_exist():
         await database.initialize()
+    await db_init(database)
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)

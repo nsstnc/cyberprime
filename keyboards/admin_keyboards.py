@@ -2,7 +2,6 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 from database.database import database
 
-# TODO ПРОСМОТР ВСЕХ ЗАДАНИЙ
 main_admin_buttons = [
     [KeyboardButton(text="Добавить задание")],
     [KeyboardButton(text="Начислить баллы")],

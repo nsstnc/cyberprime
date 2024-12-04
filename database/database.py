@@ -2,7 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .models import *
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 
 class Database:
@@ -28,6 +28,25 @@ class Database:
         expected_tables = [table.name for table in Base.metadata.sorted_tables]
 
         return all(table in table_names for table in expected_tables)
+
+    async def execute_raw_sql(self, sql_query, *params):
+        """
+        Выполняет чистый SQL-запрос.
+
+        :param sql_query: Строка с SQL-запросом
+        :param params: Дополнительные параметры для запроса
+        :return: Результат выполнения запроса
+        """
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                result = await db.execute(text(sql_query), params)
+                if result.returns_rows:
+                    return result.fetchall()
+                return result.rowcount  # Возвращает количество затронутых строк
+        except SQLAlchemyError as e:
+            print(f"Ошибка выполнения SQL-запроса: {e}")
+            return None
 
     # async def get_fractions(self):
     #     db = await self.get_async_session().__anext__()
@@ -142,5 +161,6 @@ class Database:
         except SQLAlchemyError as e:
             print(f"Error querying data: {e}")
             return []
+
 
 database = Database()

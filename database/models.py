@@ -1,5 +1,6 @@
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import create_engine, delete, Column, Integer, String, Boolean, ForeignKey, Date, inspect, select, Enum, Text
+from sqlalchemy import create_engine, delete, Column, Integer, String, Boolean, ForeignKey, Date, inspect, select, Enum, \
+    Text
 import enum
 
 Base = declarative_base()
@@ -40,3 +41,22 @@ class Fraction(Base):
     city_name = Column(String)
     branch_name = Column(Text)
     fraction_name = Column(String)
+
+
+class FractionsTaskTypes(Base):
+    __tablename__ = 'fractions_task_types'
+    id = Column(Integer, primary_key=True)
+    fraction_id = Column(Integer)
+    task_type1 = Column(Enum(TaskType))
+    task_type2 = Column(Enum(TaskType))
+    task_type3 = Column(Enum(TaskType))
+    task_type4 = Column(Enum(TaskType))
+    task_type5 = Column(Enum(TaskType))
+    task_type6 = Column(Enum(TaskType))
+    task_type7 = Column(Enum(TaskType))
+
+
+class EventStart(Base):
+    __tablename__ = 'events_start'
+    id = Column(Integer, primary_key=True)
+    date_start = Column(Date)
