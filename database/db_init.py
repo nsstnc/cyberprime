@@ -87,26 +87,25 @@ async def db_init(database: Database):
       (62,'Уфа',NULL,NULL);'''
     )
 
-    db = await database.get_async_session().__anext__()
 
     # Очистка таблицы FractionsTaskTypes
-    async with db.begin():
+    async with database.get_async_session() as db:
         delete_stmt = delete(FractionsTaskTypes)
         await db.execute(delete_stmt)
         await db.commit()
 
     fractions = None
-    async with db.begin():
+    async with database.get_async_session() as db:
         stmt = select(Fraction)
         result = await db.execute(stmt)
         fractions = result.scalars().all()
 
-    # задаем рандомные типы заданий фракциям на каждый день ивента
-    for fraction in fractions:
-        for day in range(1, 7 + 1):
-            add_fraction_task_type = FractionsTaskTypes(fraction_id=fraction.id,
-                                                        task_type=random.choice(list(TaskType)),
-                                                        day=day,
-                                                        )
-            db.add(add_fraction_task_type)
-    await db.commit()
+        # задаем рандомные типы заданий фракциям на каждый день ивента
+        for fraction in fractions:
+            for day in range(1, 7 + 1):
+                add_fraction_task_type = FractionsTaskTypes(fraction_id=fraction.id,
+                                                            task_type=random.choice(list(TaskType)).value,
+                                                            day=day,
+                                                            )
+                db.add(add_fraction_task_type)
+        await db.commit()

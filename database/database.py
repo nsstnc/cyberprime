@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from .models import *
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import inspect, text
+from contextlib import asynccontextmanager
 
 
 class Database:
@@ -16,6 +17,7 @@ class Database:
         async with self.async_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
+    @asynccontextmanager
     async def get_async_session(self):
         async with self.async_session_factory() as session:
             yield session
@@ -39,16 +41,17 @@ class Database:
         :param params: Дополнительные параметры для запроса
         :return: Результат выполнения запроса
         """
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 result = await db.execute(text(sql_query), params)
+                await db.commit()
                 if result.returns_rows:
-                    return result.fetchall()
+                    return await result.fetchall()
                 return result.rowcount  # Возвращает количество затронутых строк
-        except SQLAlchemyError as e:
-            print(f"Ошибка выполнения SQL-запроса: {e}")
-            return None
+            except SQLAlchemyError as e:
+                print(f"Ошибка выполнения SQL-запроса: {e}")
+                return None
 
     # async def get_fractions(self):
     #     db = await self.get_async_session().__anext__()
@@ -64,22 +67,22 @@ class Database:
     #         return []
 
     async def get_unique_cities(self):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(Fraction.city_name, Fraction.id).group_by(Fraction.city_name)
                 result = await db.execute(stmt)
                 cities = result.all()
                 return cities
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_branches_by_city_name(self, city_name):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(Fraction.branch_name, Fraction.id).filter(Fraction.city_name == city_name)
                 result = await db.execute(stmt)
                 branches = result.all()
@@ -88,86 +91,86 @@ class Database:
                     return None
                 return branches
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_fraction_by_id(self, id):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(Fraction).filter(Fraction.id == id)
                 result = await db.execute(stmt)
                 fraction = result.scalars().first()
                 return fraction
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def register_user(self, tgid, login, fraction_id):
-        db = await self.get_async_session().__anext__()
-        try:
-            user = User(tgid=tgid, login=login, fraction_id=fraction_id)
-            db.add(user)
-            await db.commit()
-        except SQLAlchemyError as e:
-            await db.rollback()
-            print(f"Error querying data: {e}")
-            return []
+        async with self.get_async_session() as db:
+            try:
+                user = User(tgid=tgid, login=login, fraction_id=fraction_id)
+                db.add(user)
+                await db.commit()
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+                return []
 
     async def check_user_exists(self, login):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(User).filter(User.login == login)
                 result = await db.execute(stmt)
                 user = result.scalars().first()
                 return user is not None
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def add_photohunting_task(self, description):
-        db = await self.get_async_session().__anext__()
-        try:
-            task = Task(type=TaskType.PHOTOHUNTING, description=description)
-            db.add(task)
-            await db.commit()
-        except SQLAlchemyError as e:
-            await db.rollback()
-            print(f"Error querying data: {e}")
-            return []
+        async with self.get_async_session() as db:
+            try:
+                task = Task(type=TaskType.PHOTOHUNTING, description=description)
+                db.add(task)
+                await db.commit()
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+                return []
 
     async def add_puzzle_task(self, description, answer):
-        db = await self.get_async_session().__anext__()
-        try:
-            task = Task(type=TaskType.PUZZLE, description=description, answer=answer)
-            db.add(task)
-            await db.commit()
-        except SQLAlchemyError as e:
-            await db.rollback()
-            print(f"Error querying data: {e}")
-            return []
+        async with self.get_async_session() as db:
+            try:
+                task = Task(type=TaskType.PUZZLE, description=description, answer=answer)
+                db.add(task)
+                await db.commit()
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_all_tasks(self):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(Task)
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
                 return tasks
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def set_date_start(self, date_start: datetime.date):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 # Проверяем, есть ли запись в таблице EventStart
                 stmt = select(EventStart).limit(1)
                 result = await db.execute(stmt)
@@ -184,14 +187,14 @@ class Database:
                 # Сохраняем изменения
                 await db.commit()
 
-        except SQLAlchemyError as e:
-            await db.rollback()
-            print(f"Error querying data: {e}")
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
 
     async def get_date_start(self):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(EventStart)
                 result = await db.execute(stmt)
                 date = result.scalars().first()
@@ -199,14 +202,14 @@ class Database:
                     return date.date_start
                 return None
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_users_and_fraction_task_type(self, day):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = (
                     select(
                         User.tgid,
@@ -226,50 +229,50 @@ class Database:
                     {"tgid": row.tgid, "login": row.login, "task_type": row.task_type, "day": row.day}
                     for row in users_with_tasks
                 ]
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def create_user_task(self, user_id, task_id, day):
-        db = await self.get_async_session().__anext__()
-        try:
-            user_task = UserTask(user_id=user_id, points=0, task_id=task_id, day=day, result_url=None)
-            db.add(user_task)
-            await db.commit()
-        except SQLAlchemyError as e:
-            await db.rollback()
-            print(f"Error querying data: {e}")
-            return []
+        async with self.get_async_session() as db:
+            try:
+                user_task = UserTask(user_id=user_id, points=0, task_id=task_id, day=day, result_url=None)
+                db.add(user_task)
+                await db.commit()
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_all_tasks_by_type(self, task_type: TaskType):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(Task).where(Task.type == task_type.value)
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
                 return tasks
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_user_tasks(self, user_id):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = select(UserTask, UserTask.user_id == user_id)
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
                 return tasks
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
     async def get_user_tasks_by_type(self, user_id, task_type: TaskType):
-        db = await self.get_async_session().__anext__()
-        try:
-            async with db.begin():
+        async with self.get_async_session() as db:
+            try:
+
                 stmt = (
                     select(UserTask)
                     .join(Task, UserTask.task_id == Task.id)
@@ -279,9 +282,9 @@ class Database:
                 tasks = result.scalars().all()
                 return tasks
 
-        except SQLAlchemyError as e:
-            print(f"Error querying data: {e}")
-            return []
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
 
 database = Database()
