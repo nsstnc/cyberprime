@@ -11,6 +11,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message
 from aiogram.enums import ParseMode
+from apscheduler.triggers.interval import IntervalTrigger
 from dotenv import load_dotenv
 from handlers import user, admin
 from config import ADMINS
@@ -73,6 +74,7 @@ async def main() -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     scheduler.start()
     scheduler.add_job(update_tasks, CronTrigger(hour=0, minute=0))
+    # scheduler.add_job(update_tasks, IntervalTrigger(seconds=5))
     # asyncio.create_task(check_and_send_notifications(bot))
     if not await database.is_exist():
         await database.initialize()

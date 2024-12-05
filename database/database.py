@@ -188,5 +188,100 @@ class Database:
             await db.rollback()
             print(f"Error querying data: {e}")
 
+    async def get_date_start(self):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = select(EventStart)
+                result = await db.execute(stmt)
+                date = result.scalars().first()
+                if date is not None:
+                    return date.date_start
+                return None
+
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
+
+    async def get_users_and_fraction_task_type(self, day):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = (
+                    select(
+                        User.tgid,
+                        User.login,
+                        FractionsTaskTypes.task_type,
+                        FractionsTaskTypes.day
+                    )
+                    .join(Fraction, User.fraction_id == Fraction.id)
+                    .join(FractionsTaskTypes, Fraction.id == FractionsTaskTypes.fraction_id).filter(
+                        FractionsTaskTypes.day == day)
+                )
+
+                result = await db.execute(stmt)
+                users_with_tasks = result.fetchall()
+
+                return [
+                    {"tgid": row.tgid, "login": row.login, "task_type": row.task_type, "day": row.day}
+                    for row in users_with_tasks
+                ]
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
+
+    async def create_user_task(self, user_id, task_id, day):
+        db = await self.get_async_session().__anext__()
+        try:
+            user_task = UserTask(user_id=user_id, points=0, task_id=task_id, day=day, result_url=None)
+            db.add(user_task)
+            await db.commit()
+        except SQLAlchemyError as e:
+            await db.rollback()
+            print(f"Error querying data: {e}")
+            return []
+
+    async def get_all_tasks_by_type(self, task_type: TaskType):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = select(Task).where(Task.type == task_type.value)
+                result = await db.execute(stmt)
+                tasks = result.scalars().all()
+                return tasks
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
+
+    async def get_user_tasks(self, user_id):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = select(UserTask, UserTask.user_id == user_id)
+                result = await db.execute(stmt)
+                tasks = result.scalars().all()
+                return tasks
+
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
+
+    async def get_user_tasks_by_type(self, user_id, task_type: TaskType):
+        db = await self.get_async_session().__anext__()
+        try:
+            async with db.begin():
+                stmt = (
+                    select(UserTask)
+                    .join(Task, UserTask.task_id == Task.id)
+                    .where(UserTask.user_id == user_id, Task.type == task_type.value)
+                )
+                result = await db.execute(stmt)
+                tasks = result.scalars().all()
+                return tasks
+
+        except SQLAlchemyError as e:
+            print(f"Error querying data: {e}")
+            return []
+
 
 database = Database()

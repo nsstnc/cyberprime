@@ -7,8 +7,8 @@ Base = declarative_base()
 
 
 class TaskType(enum.Enum):
-    PHOTOHUNTING = "photo_hunting"
-    PUZZLE = "puzzle"
+    PHOTOHUNTING = "PHOTOHUNTING"
+    PUZZLE = "PUZZLE"
 
 
 class User(Base):

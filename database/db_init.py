@@ -105,7 +105,7 @@ async def db_init(database: Database):
     for fraction in fractions:
         for day in range(1, 7 + 1):
             add_fraction_task_type = FractionsTaskTypes(fraction_id=fraction.id,
-                                                        task_type=random.choice(list(TaskType)).value,
+                                                        task_type=random.choice(list(TaskType)),
                                                         day=day,
                                                         )
             db.add(add_fraction_task_type)
