@@ -3,6 +3,14 @@ from pprint import pprint
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from database.database import database
 
+main_user_buttons = [
+    [KeyboardButton(text="Получить текущее задание")],
+    [KeyboardButton(text="Отправить ответ на текущее задание")],
+    [KeyboardButton(text="Мои результаты")],
+    [KeyboardButton(text="Общие результаты")],
+]
+main_user_keyboard = ReplyKeyboardMarkup(keyboard=main_user_buttons, resize_keyboard=True)
+
 
 async def get_city_select_keyboard(user_login) -> InlineKeyboardMarkup:
     cities = await database.get_unique_cities()

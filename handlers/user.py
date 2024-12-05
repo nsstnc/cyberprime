@@ -19,7 +19,7 @@ async def set_fraction(callback_query: CallbackQuery):
 
     fraction = await database.get_fraction_by_id(int(fraction_id))
     await callback_query.message.answer(
-        f"Ты вступил в фракцию {fraction.fraction_name}! Теперь ты сражаешься за свою честь и за свой город.")
+        f"Ты вступил в фракцию {fraction.fraction_name}! Теперь ты сражаешься за свою честь и за свой город.", reply_markup=main_user_keyboard)
 
 
 @router.callback_query(lambda c: c.data.startswith("set_branch:"))
