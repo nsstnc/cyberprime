@@ -13,6 +13,19 @@ from keyboards.user_keyboards import *
 router = Router()
 
 
+@router.message(F.text == "Мои результаты")
+async def get_user_results(message: Message):
+    user_tasks = await database.get_user_tasks(message.from_user.id)
+
+    text = ""
+    for user_task in user_tasks:
+        text += (
+                f"Задание {user_task.day}. Баллы: {user_task.points}\n"
+            )
+    # TODO добавить результаты всей фракции
+    await message.answer(text)
+
+
 @router.message(F.text == "Получить текущее задание")
 async def get_current_task(message: Message):
     event_date_start = await database.get_date_start()
@@ -34,9 +47,10 @@ async def get_current_task(message: Message):
             await message.answer("К сожалению, ивент еще не начался!")
         else:
             current_task = await database.get_user_task_by_day(user_id=message.from_user.id, day=current_event_day)
-            text = (f"Задание {current_event_day}. {'Фотоохота' if current_task.type == TaskType.PHOTOHUNTING else 'Головоломка'}\n\n"
-                     f"{current_task.description}"
-                     )
+            text = (
+                f"Задание {current_event_day}. {'Фотоохота' if current_task.type == TaskType.PHOTOHUNTING else 'Головоломка'}\n\n"
+                f"{current_task.description}"
+            )
             await message.answer(text)
 
 
