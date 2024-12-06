@@ -286,5 +286,20 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
+    async def get_user_task_by_day(self, user_id, day):
+        async with self.get_async_session() as db:
+            try:
+                stmt = (
+                    select(Task).join(UserTask, UserTask.task_id == Task.id)
+                    .where(UserTask.user_id == user_id, UserTask.day == day)
+                )
+                result = await db.execute(stmt)
+                task = result.scalars().first()
+                return task
+
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
+
 
 database = Database()
