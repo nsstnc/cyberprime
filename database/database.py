@@ -4,7 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from .models import *
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, text, func
 from contextlib import asynccontextmanager
 
 
@@ -260,7 +260,7 @@ class Database:
         async with self.get_async_session() as db:
             try:
 
-                stmt = select(UserTask, UserTask.user_id == user_id)
+                stmt = select(UserTask).where(UserTask.user_id == user_id)
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
                 return tasks
@@ -296,6 +296,36 @@ class Database:
                 result = await db.execute(stmt)
                 task = result.scalars().first()
                 return task
+
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
+
+    async def get_fraction_points(self, fraction_id):
+        async with self.get_async_session() as db:
+            try:
+                stmt = (
+                    select(func.sum(UserTask.points))  # Сумма очков из users_tasks
+                    .join(User, UserTask.user_id == User.tgid)  # Присоединяем пользователей
+                    .join(Fraction, User.fraction_id == Fraction.id)  # Присоединяем фракции
+                    .where(Fraction.id == fraction_id)  # Условие: ID фракции
+                )
+                result = await db.execute(stmt)
+                total_points = result.scalar()
+                return total_points or 0
+
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
+
+    async def get_user_by_id(self, user_id):
+        async with self.get_async_session() as db:
+            try:
+
+                stmt = select(User, User.tgid == user_id)
+                result = await db.execute(stmt)
+                user = result.scalars().first()
+                return user
 
             except SQLAlchemyError as e:
                 print(f"Error querying data: {e}")

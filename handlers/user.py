@@ -22,7 +22,11 @@ async def get_user_results(message: Message):
         text += (
                 f"Задание {user_task.day}. Баллы: {user_task.points}\n"
             )
-    # TODO добавить результаты всей фракции
+
+    user = await database.get_user_by_id(message.from_user.id)
+    fraction_points = await database.get_fraction_points(user.fraction_id)
+
+    text += f"\n\nОчки Вашей фракции: {fraction_points}"
     await message.answer(text)
 
 
@@ -76,3 +80,4 @@ async def set_branch(callback_query: CallbackQuery):
 
     await callback_query.message.answer(
         f"Выбери свой филиал.", reply_markup=await get_branch_select_keyboard(city_name, user_login))
+
