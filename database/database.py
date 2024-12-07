@@ -360,4 +360,24 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
+    async def add_points(self, user_task_id, points):
+        async with self.get_async_session() as db:
+            try:
+
+                stmt = select(UserTask).where(UserTask.id == user_task_id)
+                result = await db.execute(stmt)
+                user_task = result.scalars().first()
+                if user_task:
+                    # Если запись существует, обновляем её
+                    user_task.points = points
+                # Сохраняем изменения
+                await db.commit()
+
+                answer = user_task.user_id
+                return answer
+
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+
 database = Database()

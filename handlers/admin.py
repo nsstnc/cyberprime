@@ -26,6 +26,34 @@ class DateStates(StatesGroup):
     waiting_for_date = State()
 
 
+class AddPointsStates(StatesGroup):
+    waiting_for_points = State()
+
+
+@router.message(F.text == "Начислить баллы")
+async def add_points_step1(message: Message, state: FSMContext):
+    if message.from_user.id in ADMINS:
+        await message.answer(
+            "Для начисления баллов отправьте сообщение в формате: &lt;user_task_id&gt; &lt;кол-во баллов&gt;\n\nНапример:\n35 10",
+            parse_mode="HTML"
+        )
+        await state.set_state(AddPointsStates.waiting_for_points)
+
+
+@router.message(AddPointsStates.waiting_for_points, F.text)
+async def add_points_step2(message: Message, state: FSMContext) -> None:
+    command_message = message.text.strip()
+    try:
+        user_task_id, points = map(int, command_message.split(" "))
+
+        # Начисляем баллы в БД
+        user_tgid = await database.add_points(user_task_id, points)
+        await message.answer(f"Баллы начислены пользователю: {user_tgid}")
+        await state.clear()
+    except ValueError:
+        # Если формат неверный, сообщаем пользователю
+        await message.answer("Неверный формат сообщения. Пожалуйста, введите сообщение в нужном формате")
+
 @router.message(F.text == "Добавить задание")
 async def start_add_supervisor(message: Message):
     if message.from_user.id in ADMINS:

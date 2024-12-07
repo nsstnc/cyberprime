@@ -73,8 +73,8 @@ from database.db_init import db_init
 async def main() -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     scheduler.start()
-    # scheduler.add_job(update_tasks, args=[bot], trigger=CronTrigger(hour=0, minute=0))
-    scheduler.add_job(update_tasks, args=[bot], trigger=IntervalTrigger(seconds=5))
+    scheduler.add_job(update_tasks, args=[bot], trigger=CronTrigger(hour=0, minute=0))
+    # scheduler.add_job(update_tasks, args=[bot], trigger=IntervalTrigger(seconds=5))
     # asyncio.create_task(check_and_send_notifications(bot))
     if not await database.is_exist():
         await database.initialize()
