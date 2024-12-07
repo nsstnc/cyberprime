@@ -32,8 +32,17 @@ class Task(Base):
     __tablename__ = 'tasks'
     id = Column(Integer, primary_key=True)
     type = Column(Enum(TaskType))
+    day = Column(Integer)
+
+
+class Variant(Base):
+    __tablename__ = 'variants'
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer)
+    image_url = Column(Text)
     description = Column(Text)
     answer = Column(Text)
+    hint = Column(Text)
 
 
 class Fraction(Base):
@@ -44,13 +53,12 @@ class Fraction(Base):
     fraction_name = Column(String)
 
 
-class FractionsTaskTypes(Base):
-    __tablename__ = 'fractions_task_types'
-    id = Column(Integer, primary_key=True)
-    fraction_id = Column(Integer)
-    day = Column(Integer)
-    task_type = Column(Enum(TaskType))
-
+# class FractionsTaskTypes(Base):
+#     __tablename__ = 'fractions_task_types'
+#     id = Column(Integer, primary_key=True)
+#     fraction_id = Column(Integer)
+#     day = Column(Integer)
+#     task_type = Column(Enum(TaskType))
 
 
 class EventStart(Base):
