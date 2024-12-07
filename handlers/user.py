@@ -9,17 +9,14 @@ import re
 from database.database import database
 from database.models import TaskType
 from keyboards.user_keyboards import *
-
+from utils import get_results_message
 router = Router()
 
 
 @router.message(F.text == "Общие результаты")
 async def get_user_results(message: Message):
-    fractions_points = await database.get_fractions_points()
-    print(fractions_points)
-    text = "Общие очки фракций"
-    for fraction_id, fraction_name, points in fractions_points:
-        text += f"\n{fraction_name}: {points}"
+    text = await get_results_message()
+    text = "Общие очки фракций" + text
     await message.answer(text)
 
 

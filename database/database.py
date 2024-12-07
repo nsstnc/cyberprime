@@ -349,5 +349,15 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
+    async def get_all_users(self):
+        async with self.get_async_session() as db:
+            try:
+                stmt = select(User)
+                result = await db.execute(stmt)
+                users = result.scalars().all()
+                return users
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
 
 database = Database()

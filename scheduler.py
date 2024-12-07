@@ -2,10 +2,12 @@ import asyncio
 from datetime import datetime, timedelta
 from pprint import pprint
 import random
-
+from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from database.database import database
 import pytz
+
+from utils import get_results_message
 
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
@@ -23,9 +25,8 @@ async def get_free_tasks_for_user(old_user_tasks, all_tasks):
     return free_tasks
 
 
-async def update_tasks():
+async def update_tasks(bot: Bot):
     """Задача, по добавлению заданий выполняемая ежедневно."""
-    # TODO получить всех пользователей и тип задачи текущего дня каждого пользователя
     # получаем дату начала ивента
     event_date_start = await database.get_date_start()
     # если дата старта не задана, ничего не делаем
@@ -38,11 +39,22 @@ async def update_tasks():
 
         # Вычисляем номер текущего дня с учётом начальной даты события
         current_day = (now_in_moscow.date() - event_date_start).days + 1
-        if current_day > 7:
+        if current_day == 6:
             # ивент закончился
-            # TODO результаты ивента
-            # TODO в конце можно сдвинуть дату, чтобы не срабатывало снова
-            pass
+            all_users = await database.get_all_users()
+            text = await get_results_message()
+            text = "Наш ивент подошел к концу! Ознакомьтесь с результатами:\n" + text
+            for user in all_users:
+                try:
+                    await bot.send_message(user.tgid, text)
+                except:
+                    pass
+
+            # скидываем дату начала ивента чтобы выполнение отложенных функций прекратилось
+            date_start = datetime.strptime("01.01.2024", "%d.%m.%Y").date()
+            # Записываем дату в базу данных
+            await database.set_date_start(date_start)
+
         elif current_day < 1:
             # ивент еще не начался
             pass
