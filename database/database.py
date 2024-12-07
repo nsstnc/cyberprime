@@ -233,6 +233,43 @@ class Database:
     #             print(f"Error querying data: {e}")
     #             return []
 
+    async def get_task_variants_by_day(self, day):
+        async with self.get_async_session() as db:
+            try:
+                stmt = (
+                    select(
+                        Variant.id,
+                        Task.type,
+                        Task.day,
+                        Variant.image_url,
+                        Variant.description,
+                        Variant.answer,
+                        Variant.hint,
+                    )
+                    .join(Variant, Task.id == Variant.task_id)
+                    .filter(
+                        Task.day == day)
+                )
+
+                result = await db.execute(stmt)
+                tasks_with_variants = result.fetchall()
+
+                return [
+                    {
+                        "id": row.id,
+                        "type": row.type,
+                        "day": row.day,
+                        "image_url": row.image_url,
+                        "description": row.description,
+                        "answer": row.answer,
+                        "hint": row.hint,
+                    }
+                    for row in tasks_with_variants
+                ]
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
+
     async def create_user_task(self, user_id, task_id, day):
         async with self.get_async_session() as db:
             try:
@@ -269,14 +306,14 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    async def get_user_tasks_by_type(self, user_id, task_type: TaskType):
+    async def get_user_tasks_by_day(self, user_id, day):
         async with self.get_async_session() as db:
             try:
 
                 stmt = (
                     select(UserTask)
                     .join(Task, UserTask.task_id == Task.id)
-                    .where(UserTask.user_id == user_id, Task.type == task_type.value)
+                    .where(UserTask.user_id == user_id, UserTask.day == day)
                 )
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
@@ -379,5 +416,6 @@ class Database:
             except SQLAlchemyError as e:
                 await db.rollback()
                 print(f"Error querying data: {e}")
+
 
 database = Database()
