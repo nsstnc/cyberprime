@@ -49,6 +49,7 @@ async def add_points_step2(message: Message, state: FSMContext) -> None:
         # Начисляем баллы в БД
         user_tgid = await database.add_points(user_task_id, points)
         await message.answer(f"Баллы начислены пользователю: {user_tgid}")
+        await message.bot.send_message(user_tgid, f"Задание проверено, фракция получает {points} очков.")
         await state.clear()
     except ValueError:
         # Если формат неверный, сообщаем пользователю
