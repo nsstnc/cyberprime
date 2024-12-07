@@ -327,11 +327,14 @@ class Database:
         async with self.get_async_session() as db:
             try:
                 stmt = (
-                    select(Task).join(UserTask, UserTask.task_id == Task.id)
+                    select(Variant.description,
+                           Task.type,
+                           ).join(UserTask, UserTask.task_id == Variant.id
+                                  ).join(Task, Variant.task_id == Task.id)
                     .where(UserTask.user_id == user_id, UserTask.day == day)
                 )
                 result = await db.execute(stmt)
-                task = result.scalars().first()
+                task = result.first()
                 return task
 
             except SQLAlchemyError as e:

@@ -58,6 +58,7 @@ async def get_current_task(message: Message):
             await message.answer("К сожалению, ивент еще не начался!")
         else:
             current_task = await database.get_user_task_by_day(user_id=message.from_user.id, day=current_event_day)
+            pprint(current_task)
             text = (
                 f"Задание {current_event_day}. {'Фотоохота' if current_task.type == TaskType.PHOTOHUNTING else 'Головоломка'}\n\n"
                 f"{current_task.description}"
