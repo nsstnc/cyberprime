@@ -331,5 +331,23 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
+    async def get_fractions_points(self):
+        async with self.get_async_session() as db:
+            try:
+                stmt = (
+                    select(Fraction.id, Fraction.fraction_name,
+                           func.sum(UserTask.points))  # Сумма очков для каждой фракции
+                    .join(User, UserTask.user_id == User.tgid)  # Присоединяем пользователей
+                    .join(Fraction, User.fraction_id == Fraction.id)  # Присоединяем фракции
+                    .group_by(Fraction.id, Fraction.fraction_name)  # Группируем по ID и названию фракции
+                )
+                result = await db.execute(stmt)
+                fractions_points = result.all()  # Получаем список всех фракций с их очками
+                return fractions_points
+
+            except SQLAlchemyError as e:
+                print(f"Error querying data: {e}")
+                return []
+
 
 database = Database()

@@ -13,6 +13,16 @@ from keyboards.user_keyboards import *
 router = Router()
 
 
+@router.message(F.text == "Общие результаты")
+async def get_user_results(message: Message):
+    fractions_points = await database.get_fractions_points()
+    print(fractions_points)
+    text = "Общие очки фракций"
+    for fraction_id, fraction_name, points in fractions_points:
+        text += f"\n{fraction_name}: {points}"
+    await message.answer(text)
+
+
 @router.message(F.text == "Мои результаты")
 async def get_user_results(message: Message):
     user_tasks = await database.get_user_tasks(message.from_user.id)
@@ -20,8 +30,8 @@ async def get_user_results(message: Message):
     text = ""
     for user_task in user_tasks:
         text += (
-                f"Задание {user_task.day}. Баллы: {user_task.points}\n"
-            )
+            f"Задание {user_task.day}. Баллы: {user_task.points}\n"
+        )
 
     user = await database.get_user_by_id(message.from_user.id)
     fraction_points = await database.get_fraction_points(user.fraction_id)
@@ -80,4 +90,3 @@ async def set_branch(callback_query: CallbackQuery):
 
     await callback_query.message.answer(
         f"Выбери свой филиал.", reply_markup=await get_branch_select_keyboard(city_name, user_login))
-
