@@ -2,15 +2,19 @@ from datetime import datetime
 
 import pytz
 from aiogram import Router, F
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery, InputFile, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 import re
 from database.database import database
 from database.models import TaskType
 from keyboards.user_keyboards import *
-from utils import get_results_message
+from utils import get_results_message, get_absolute_path
+import os
+
 router = Router()
+
+
 
 
 @router.message(F.text == "Общие результаты")
@@ -63,7 +67,16 @@ async def get_current_task(message: Message):
                 f"Задание {current_event_day}. {'Фотоохота' if current_task.type == TaskType.PHOTOHUNTING else 'Головоломка'}\n\n"
                 f"{current_task.description}"
             )
-            await message.answer(text)
+
+            if current_task.image_url:
+                image_path = await get_absolute_path(current_task.image_url)
+                try:
+                    photo = FSInputFile(image_path)
+                    await message.bot.send_photo(chat_id=message.chat.id, photo=photo, caption=text)
+                except FileNotFoundError:
+                    print("Изображение для задания не найдено.")
+            else:
+                await message.answer(text)
 
 
 @router.callback_query(lambda c: c.data.startswith("set_fraction:"))

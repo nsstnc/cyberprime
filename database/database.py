@@ -328,6 +328,7 @@ class Database:
             try:
                 stmt = (
                     select(Variant.description,
+                           Variant.image_url,
                            Task.type,
                            ).join(UserTask, UserTask.task_id == Variant.id
                                   ).join(Task, Variant.task_id == Task.id)
