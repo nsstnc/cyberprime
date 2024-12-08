@@ -84,3 +84,25 @@ async def update_tasks(bot: Bot):
             #         print("Задачи не заполнены")
 
     print(f"Ежедневная задача выполнена в {datetime.now()}")
+
+
+async def notificate_for_task_completion(bot: Bot):
+    text = "Не забудьте выполнить текущее задание до 00:00 по МСК"
+    users = await database.get_all_users()
+    for user in users:
+        await bot.send_message(user.tgid, text)
+    print(f"Ежедневная задача выполнена в {datetime.now()}")
+
+
+async def notificate_for_fractions_result(bot: Bot):
+    fractions_points = await database.get_fractions_points()
+    print(fractions_points)
+    best_fractions = sorted(fractions_points, key=lambda x: x[2], reverse=True)[:2]
+    pprint(best_fractions)
+    text = f"Фракция {best_fractions[0][1]} лидирует"
+    if len(best_fractions) > 1:
+        text += f", но {best_fractions[1][1]} наступают!"
+    users = await database.get_all_users()
+    for user in users:
+        await bot.send_message(user.tgid, text)
+    print(f"Ежедневная задача выполнена в {datetime.now()}")
