@@ -329,7 +329,10 @@ class Database:
                 stmt = (
                     select(Variant.description,
                            Variant.image_url,
+                           Variant.hint,
                            Task.type,
+                           UserTask.id.label("user_task_id"),
+                           Variant.id.label("variant_id")
                            ).join(UserTask, UserTask.task_id == Variant.id
                                   ).join(Task, Variant.task_id == Task.id)
                     .where(UserTask.user_id == user_id, UserTask.day == day)
@@ -416,6 +419,18 @@ class Database:
 
                 answer = user_task.user_id
                 return answer
+
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+
+    async def get_hint_by_variant_id(self, variant_id):
+        async with self.get_async_session() as db:
+            try:
+                stmt = select(Variant.hint).where(Variant.id == variant_id)
+                result = await db.execute(stmt)
+                hint = result.scalars().first()
+                return hint
 
             except SQLAlchemyError as e:
                 await db.rollback()

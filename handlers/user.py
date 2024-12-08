@@ -15,8 +15,6 @@ import os
 router = Router()
 
 
-
-
 @router.message(F.text == "Общие результаты")
 async def get_user_results(message: Message):
     text = await get_results_message()
@@ -72,11 +70,40 @@ async def get_current_task(message: Message):
                 image_path = await get_absolute_path(current_task.image_url)
                 try:
                     photo = FSInputFile(image_path)
-                    await message.bot.send_photo(chat_id=message.chat.id, photo=photo, caption=text)
+                    await message.bot.send_photo(chat_id=message.chat.id, photo=photo, caption=text,
+                                                 reply_markup=await get_hint_keyboard(current_task.variant_id,
+                                                                                      current_task.user_task_id) if current_task.hint else None)
                 except FileNotFoundError:
                     print("Изображение для задания не найдено.")
             else:
-                await message.answer(text)
+                await message.answer(text, reply_markup=await get_hint_keyboard(current_task.variant_id,
+                                                                                current_task.user_task_id) if current_task.hint else None)
+
+
+@router.callback_query(lambda c: c.data.startswith("try_to_get_hint:"))
+async def set_fraction(callback_query: CallbackQuery):
+    await callback_query.answer("Выбрано")
+
+    variant_id, user_task_id = callback_query.data.split(":")[1:]
+
+    await callback_query.message.answer(
+        f"Ты хочешь воспользоваться подсказкой? Это обойдётся фракции в -10 очков. Подтверждаешь? "
+        f"(Если нет, просто продолжай пользоваться ботом)",
+        reply_markup=await confirm_get_hint_keyboard(variant_id, user_task_id))
+
+
+@router.callback_query(lambda c: c.data.startswith("get_hint:"))
+async def set_fraction(callback_query: CallbackQuery):
+    await callback_query.answer("Выбрано")
+
+    variant_id, user_task_id = callback_query.data.split(":")[1:]
+    hint = await database.get_hint_by_variant_id(int(variant_id))
+    await database.add_points(int(user_task_id), -10)
+
+    await callback_query.message.answer(
+        f"Внимательно прочти:\n\n"
+        f"{hint}\n\n"
+        f"Удачи!")
 
 
 @router.callback_query(lambda c: c.data.startswith("set_fraction:"))
