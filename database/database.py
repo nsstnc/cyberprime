@@ -206,28 +206,65 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    async def get_users_and_fraction_task_type(self, day):
+    # async def get_users_and_fraction_task_type(self, day):
+    #     async with self.get_async_session() as db:
+    #         try:
+    #
+    #             stmt = (
+    #                 select(
+    #                     User.tgid,
+    #                     User.login,
+    #                     FractionsTaskTypes.task_type,
+    #                     FractionsTaskTypes.day
+    #                 )
+    #                 .join(Fraction, User.fraction_id == Fraction.id)
+    #                 .join(FractionsTaskTypes, Fraction.id == FractionsTaskTypes.fraction_id).filter(
+    #                     FractionsTaskTypes.day == day)
+    #             )
+    #
+    #             result = await db.execute(stmt)
+    #             users_with_tasks = result.fetchall()
+    #
+    #             return [
+    #                 {"tgid": row.tgid, "login": row.login, "task_type": row.task_type, "day": row.day}
+    #                 for row in users_with_tasks
+    #             ]
+    #         except SQLAlchemyError as e:
+    #             print(f"Error querying data: {e}")
+    #             return []
+
+    async def get_task_variants_by_day(self, day):
         async with self.get_async_session() as db:
             try:
-
                 stmt = (
                     select(
-                        User.tgid,
-                        User.login,
-                        FractionsTaskTypes.task_type,
-                        FractionsTaskTypes.day
+                        Variant.id,
+                        Task.type,
+                        Task.day,
+                        Variant.image_url,
+                        Variant.description,
+                        Variant.answer,
+                        Variant.hint,
                     )
-                    .join(Fraction, User.fraction_id == Fraction.id)
-                    .join(FractionsTaskTypes, Fraction.id == FractionsTaskTypes.fraction_id).filter(
-                        FractionsTaskTypes.day == day)
+                    .join(Variant, Task.id == Variant.task_id)
+                    .filter(
+                        Task.day == day)
                 )
 
                 result = await db.execute(stmt)
-                users_with_tasks = result.fetchall()
+                tasks_with_variants = result.fetchall()
 
                 return [
-                    {"tgid": row.tgid, "login": row.login, "task_type": row.task_type, "day": row.day}
-                    for row in users_with_tasks
+                    {
+                        "id": row.id,
+                        "type": row.type,
+                        "day": row.day,
+                        "image_url": row.image_url,
+                        "description": row.description,
+                        "answer": row.answer,
+                        "hint": row.hint,
+                    }
+                    for row in tasks_with_variants
                 ]
             except SQLAlchemyError as e:
                 print(f"Error querying data: {e}")
@@ -269,14 +306,14 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    async def get_user_tasks_by_type(self, user_id, task_type: TaskType):
+    async def get_user_tasks_by_day(self, user_id, day):
         async with self.get_async_session() as db:
             try:
 
                 stmt = (
                     select(UserTask)
                     .join(Task, UserTask.task_id == Task.id)
-                    .where(UserTask.user_id == user_id, Task.type == task_type.value)
+                    .where(UserTask.user_id == user_id, UserTask.day == day)
                 )
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
@@ -290,11 +327,18 @@ class Database:
         async with self.get_async_session() as db:
             try:
                 stmt = (
-                    select(Task).join(UserTask, UserTask.task_id == Task.id)
+                    select(Variant.description,
+                           Variant.image_url,
+                           Variant.hint,
+                           Task.type,
+                           UserTask.id.label("user_task_id"),
+                           Variant.id.label("variant_id")
+                           ).join(UserTask, UserTask.task_id == Variant.id
+                                  ).join(Task, Variant.task_id == Task.id)
                     .where(UserTask.user_id == user_id, UserTask.day == day)
                 )
                 result = await db.execute(stmt)
-                task = result.scalars().first()
+                task = result.first()
                 return task
 
             except SQLAlchemyError as e:
@@ -379,5 +423,36 @@ class Database:
             except SQLAlchemyError as e:
                 await db.rollback()
                 print(f"Error querying data: {e}")
+
+    async def get_hint_by_variant_id(self, variant_id):
+        async with self.get_async_session() as db:
+            try:
+                stmt = select(Variant.hint).where(Variant.id == variant_id)
+                result = await db.execute(stmt)
+                hint = result.scalars().first()
+                return hint
+
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+
+    async def set_user_answer(self, user_task_id, answer=None, result_url=None):
+        async with self.get_async_session() as db:
+            try:
+                stmt = select(UserTask).where(UserTask.id == user_task_id)
+                result = await db.execute(stmt)
+                user_task = result.scalars().first()
+
+                # обновляем запись
+                user_task.result_url = result_url
+                user_task.user_answer = answer
+
+                # Сохраняем изменения
+                await db.commit()
+
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+
 
 database = Database()

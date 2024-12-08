@@ -12,6 +12,22 @@ main_user_buttons = [
 main_user_keyboard = ReplyKeyboardMarkup(keyboard=main_user_buttons, resize_keyboard=True)
 
 
+async def get_hint_keyboard(variant_id, user_task_id):
+    hint_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Получить подсказку",
+                              callback_data=f"try_to_get_hint:{variant_id}:{user_task_id}")]
+    ])
+    return hint_keyboard
+
+
+async def confirm_get_hint_keyboard(variant_id, user_task_id):
+    confirm_hint_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Подтверждаю. Получить подсказку",
+                              callback_data=f"get_hint:{variant_id}:{user_task_id}")],
+    ])
+    return confirm_hint_keyboard
+
+
 async def get_city_select_keyboard(user_login) -> InlineKeyboardMarkup:
     cities = await database.get_unique_cities()
     pprint(cities)

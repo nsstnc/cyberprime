@@ -18,7 +18,7 @@ from config import ADMINS
 from keyboards.user_keyboards import get_city_select_keyboard
 from keyboards.admin_keyboards import main_admin_keyboard
 from database.database import database
-from scheduler import scheduler, update_tasks
+from scheduler import scheduler, update_tasks, notificate_for_task_completion, notificate_for_fractions_result
 from apscheduler.triggers.cron import CronTrigger
 
 load_dotenv()
@@ -75,6 +75,11 @@ async def main() -> None:
     scheduler.start()
     scheduler.add_job(update_tasks, args=[bot], trigger=CronTrigger(hour=0, minute=0))
     # scheduler.add_job(update_tasks, args=[bot], trigger=IntervalTrigger(seconds=5))
+    scheduler.add_job(notificate_for_task_completion, args=[bot], trigger=CronTrigger(hour=18, minute=0))
+    # scheduler.add_job(notificate_for_task_completion, args=[bot], trigger=IntervalTrigger(seconds=5))
+    scheduler.add_job(notificate_for_fractions_result, args=[bot], trigger=CronTrigger(hour=15, minute=0))
+    # scheduler.add_job(notificate_for_fractions_result, args=[bot], trigger=IntervalTrigger(seconds=5))
+
     # asyncio.create_task(check_and_send_notifications(bot))
     if not await database.is_exist():
         await database.initialize()

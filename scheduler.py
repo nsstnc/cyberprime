@@ -20,7 +20,7 @@ async def get_free_tasks_for_user(old_user_tasks, all_tasks):
     :return:
     """
     old_task_ids = {task.task_id for task in old_user_tasks}
-    free_tasks = [task for task in all_tasks if task.id not in old_task_ids]
+    free_tasks = [task for task in all_tasks if task.get("id") not in old_task_ids]
 
     return free_tasks
 
@@ -59,22 +59,50 @@ async def update_tasks(bot: Bot):
             # ивент еще не начался
             pass
         else:
-            users_with_tasks = await database.get_users_and_fraction_task_type(current_day)
-            pprint(users_with_tasks)
-            for user_with_task in users_with_tasks:
-                task_type = user_with_task.get('task_type')
-
-                tasks = await database.get_all_tasks_by_type(task_type)
-                old_user_tasks = await database.get_user_tasks_by_type(user_with_task.get('tgid'), task_type)
-
-                if tasks:
-                    random_task = random.choice(await get_free_tasks_for_user(old_user_tasks, tasks))
-
-                    await database.create_user_task(user_id=user_with_task.get('tgid'),
-                                                    task_id=random_task.id,
-                                                    day=user_with_task.get('day'), )
-                else:
-                    print("Задачи не заполнены")
+            task_variants = await database.get_task_variants_by_day(current_day)
+            pprint(task_variants)
+            users = await database.get_all_users()
+            for user in users:
+                old_user_tasks = await database.get_user_tasks_by_day(user.tgid, current_day)
+                random_task = random.choice(await get_free_tasks_for_user(old_user_tasks, task_variants))
+                await database.create_user_task(user_id=user.tgid,
+                                                task_id=random_task.get("id"),
+                                                day=current_day)
+            # for user_with_task in users_with_tasks:
+            #     task_type = user_with_task.get('task_type')
+            #
+            #     tasks = await database.get_all_tasks_by_type(task_type)
+            #     old_user_tasks = await database.get_user_tasks_by_type(user_with_task.get('tgid'), task_type)
+            #
+            #     if tasks:
+            #         random_task = random.choice(await get_free_tasks_for_user(old_user_tasks, tasks))
+            #
+            #         await database.create_user_task(user_id=user_with_task.get('tgid'),
+            #                                         task_id=random_task.id,
+            #                                         day=user_with_task.get('day'), )
+            #     else:
+            #         print("Задачи не заполнены")
 
     print(f"Ежедневная задача выполнена в {datetime.now()}")
 
+
+async def notificate_for_task_completion(bot: Bot):
+    text = "Не забудьте выполнить текущее задание до 00:00 по МСК"
+    users = await database.get_all_users()
+    for user in users:
+        await bot.send_message(user.tgid, text)
+    print(f"Ежедневная задача выполнена в {datetime.now()}")
+
+
+async def notificate_for_fractions_result(bot: Bot):
+    fractions_points = await database.get_fractions_points()
+    print(fractions_points)
+    best_fractions = sorted(fractions_points, key=lambda x: x[2], reverse=True)[:2]
+    pprint(best_fractions)
+    text = f"Фракция {best_fractions[0][1]} лидирует"
+    if len(best_fractions) > 1:
+        text += f", но {best_fractions[1][1]} наступают!"
+    users = await database.get_all_users()
+    for user in users:
+        await bot.send_message(user.tgid, text)
+    print(f"Ежедневная задача выполнена в {datetime.now()}")
