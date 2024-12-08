@@ -25,6 +25,7 @@ class UserTask(Base):
     points = Column(Integer)
     task_id = Column(Integer)
     day = Column(Integer)
+    user_answer = Column(Text)
     result_url = Column(Text)
 
 

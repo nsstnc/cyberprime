@@ -436,5 +436,23 @@ class Database:
                 await db.rollback()
                 print(f"Error querying data: {e}")
 
+    async def set_user_answer(self, user_task_id, answer=None, result_url=None):
+        async with self.get_async_session() as db:
+            try:
+                stmt = select(UserTask).where(UserTask.id == user_task_id)
+                result = await db.execute(stmt)
+                user_task = result.scalars().first()
+
+                # обновляем запись
+                user_task.result_url = result_url
+                user_task.user_answer = answer
+
+                # Сохраняем изменения
+                await db.commit()
+
+            except SQLAlchemyError as e:
+                await db.rollback()
+                print(f"Error querying data: {e}")
+
 
 database = Database()
