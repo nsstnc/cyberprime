@@ -7,9 +7,14 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from database.database import database
 import pytz
 
-from utils import get_results_message
+from utils import get_results_message, create_report
 
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
+
+
+async def write_report(google_client, spreadsheet_url):
+    sheets = await create_report()
+    google_client.write_to_google_sheets(df_dict=sheets, spreadsheet_url=spreadsheet_url)
 
 
 async def get_free_tasks_for_user(old_user_tasks, all_tasks):

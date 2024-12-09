@@ -206,33 +206,6 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    # async def get_users_and_fraction_task_type(self, day):
-    #     async with self.get_async_session() as db:
-    #         try:
-    #
-    #             stmt = (
-    #                 select(
-    #                     User.tgid,
-    #                     User.login,
-    #                     FractionsTaskTypes.task_type,
-    #                     FractionsTaskTypes.day
-    #                 )
-    #                 .join(Fraction, User.fraction_id == Fraction.id)
-    #                 .join(FractionsTaskTypes, Fraction.id == FractionsTaskTypes.fraction_id).filter(
-    #                     FractionsTaskTypes.day == day)
-    #             )
-    #
-    #             result = await db.execute(stmt)
-    #             users_with_tasks = result.fetchall()
-    #
-    #             return [
-    #                 {"tgid": row.tgid, "login": row.login, "task_type": row.task_type, "day": row.day}
-    #                 for row in users_with_tasks
-    #             ]
-    #         except SQLAlchemyError as e:
-    #             print(f"Error querying data: {e}")
-    #             return []
-
     async def get_task_variants_by_day(self, day):
         async with self.get_async_session() as db:
             try:
@@ -331,6 +304,7 @@ class Database:
                            Variant.image_url,
                            Variant.hint,
                            Task.type,
+                           UserTask.points,
                            UserTask.id.label("user_task_id"),
                            Variant.id.label("variant_id")
                            ).join(UserTask, UserTask.task_id == Variant.id
