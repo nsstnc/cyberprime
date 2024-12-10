@@ -79,21 +79,21 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    async def get_branches_by_city_name(self, city_name):
-        async with self.get_async_session() as db:
-            try:
-
-                stmt = select(Fraction.branch_name, Fraction.id).filter(Fraction.city_name == city_name)
-                result = await db.execute(stmt)
-                branches = result.all()
-
-                if all(x.branch_name is None for x in branches):
-                    return None
-                return branches
-
-            except SQLAlchemyError as e:
-                print(f"Error querying data: {e}")
-                return []
+    # async def get_branches_by_city_name(self, city_name):
+    #     async with self.get_async_session() as db:
+    #         try:
+    #
+    #             stmt = select(Fraction.branch_name, Fraction.id).filter(Fraction.city_name == city_name)
+    #             result = await db.execute(stmt)
+    #             branches = result.all()
+    #
+    #             if all(x.branch_name is None for x in branches):
+    #                 return None
+    #             return branches
+    #
+    #         except SQLAlchemyError as e:
+    #             print(f"Error querying data: {e}")
+    #             return []
 
     async def get_fraction_by_id(self, id):
         async with self.get_async_session() as db:
@@ -206,10 +206,11 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    async def get_task_variants_by_day(self, day):
+    async def get_task_variants_by_day_and_fraction_name(self, day, fraction_name):
         async with self.get_async_session() as db:
             try:
-                stmt = (
+                # Первичная фильтрация по дню
+                base_stmt = (
                     select(
                         Variant.id,
                         Task.type,
@@ -218,15 +219,28 @@ class Database:
                         Variant.description,
                         Variant.answer,
                         Variant.hint,
+                        Variant.fraction_name,
                     )
                     .join(Variant, Task.id == Variant.task_id)
-                    .filter(
-                        Task.day == day)
+                    .filter(Task.day == day)
                 )
 
-                result = await db.execute(stmt)
-                tasks_with_variants = result.fetchall()
+                # Проверяем, есть ли записи с fraction_name == None
+                result = await db.execute(base_stmt)
+                filtered_tasks = result.fetchall()
 
+                if any(row.fraction_name is None for row in filtered_tasks):
+                    # Если есть записи с fraction_name == None, возвращаем все без фильтрации по fraction_name
+                    stmt = base_stmt
+                else:
+                    # Если таких записей нет, фильтруем дополнительно по fraction_name
+                    stmt = base_stmt.filter(Variant.fraction_name == fraction_name)
+
+                # Выполняем финальный запрос
+                final_result = await db.execute(stmt)
+                tasks_with_variants = final_result.fetchall()
+
+                # Формируем результат
                 return [
                     {
                         "id": row.id,
@@ -440,6 +454,7 @@ class Database:
             except SQLAlchemyError as e:
                 await db.rollback()
                 print(f"Error querying data: {e}")
+
 
 
 database = Database()

@@ -40,6 +40,7 @@ class Variant(Base):
     __tablename__ = 'variants'
     id = Column(Integer, primary_key=True)
     task_id = Column(Integer)
+    fraction_name = Column(Text)
     image_url = Column(Text)
     description = Column(Text)
     answer = Column(Text)
@@ -50,7 +51,6 @@ class Fraction(Base):
     __tablename__ = 'fractions'
     id = Column(Integer, primary_key=True)
     city_name = Column(String)
-    branch_name = Column(Text)
     fraction_name = Column(String)
 
 

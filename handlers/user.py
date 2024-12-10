@@ -125,7 +125,7 @@ async def get_current_task(message: Message):
 
 
 @router.callback_query(lambda c: c.data.startswith("try_to_get_hint:"))
-async def set_fraction(callback_query: CallbackQuery):
+async def try_to_get_hint(callback_query: CallbackQuery):
     await callback_query.answer("Выбрано")
 
     variant_id, user_task_id = callback_query.data.split(":")[1:]
@@ -137,7 +137,7 @@ async def set_fraction(callback_query: CallbackQuery):
 
 
 @router.callback_query(lambda c: c.data.startswith("get_hint:"))
-async def set_fraction(callback_query: CallbackQuery):
+async def get_hint(callback_query: CallbackQuery):
     await callback_query.answer("Выбрано")
 
     variant_id, user_task_id = callback_query.data.split(":")[1:]
@@ -164,11 +164,4 @@ async def set_fraction(callback_query: CallbackQuery):
         reply_markup=main_user_keyboard)
 
 
-@router.callback_query(lambda c: c.data.startswith("set_branch:"))
-async def set_branch(callback_query: CallbackQuery):
-    await callback_query.answer("Выбрано")
 
-    city_name, user_login = callback_query.data.split(":")[1:]
-
-    await callback_query.message.answer(
-        f"Выбери свой филиал.", reply_markup=await get_branch_select_keyboard(city_name, user_login))
