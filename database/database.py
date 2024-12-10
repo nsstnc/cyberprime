@@ -158,7 +158,7 @@ class Database:
         async with self.get_async_session() as db:
             try:
 
-                stmt = select(Task)
+                stmt = select(Variant)
                 result = await db.execute(stmt)
                 tasks = result.scalars().all()
                 return tasks

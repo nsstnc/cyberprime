@@ -3,7 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from database.database import database
 
 main_admin_buttons = [
-    [KeyboardButton(text="Добавить задание")],
+    # [KeyboardButton(text="Добавить задание")],
     [KeyboardButton(text="Начислить баллы")],
     [KeyboardButton(text="Список заданий")],
     [KeyboardButton(text="Задать дату старта")],

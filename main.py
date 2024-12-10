@@ -85,7 +85,7 @@ async def main() -> None:
     # scheduler.add_job(notificate_for_task_completion, args=[bot], trigger=IntervalTrigger(seconds=5))
     scheduler.add_job(notificate_for_fractions_result, args=[bot], trigger=CronTrigger(hour=15, minute=0))
     # scheduler.add_job(notificate_for_fractions_result, args=[bot], trigger=IntervalTrigger(seconds=5))
-    scheduler.add_job(write_report, args=[google_sheets_client, google_drive_client, SPREADSHEET_URL], trigger=IntervalTrigger(seconds=10))
+    scheduler.add_job(write_report, args=[google_sheets_client, google_drive_client, SPREADSHEET_URL], trigger=IntervalTrigger(minutes=30))
     # asyncio.create_task(check_and_send_notifications(bot))
     if not await database.is_exist():
         await database.initialize()

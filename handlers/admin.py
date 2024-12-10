@@ -66,14 +66,22 @@ async def start_add_supervisor(message: Message):
     if message.from_user.id in ADMINS:
         tasks = await database.get_all_tasks()
         print(tasks)
-        text = "Задания:\n\n"
-        for i in range(len(tasks)):
-            text += (f"{i + 1}. {'Фотоохота' if tasks[i].type == TaskType.PHOTOHUNTING else 'Головоломка'}\n"
-                     f"Описание. {tasks[i].description}\n\n"
-                     f"Правильный ответ: {tasks[i].answer}\n\n"
-                     )
+        for task in tasks:
+            text = f"Задание/день {task.task_id}.\n"
 
-        await message.answer(text)
+            if task.fraction_name is not None:
+                text += f"Фракция: {task.fraction_name}\n"
+
+            if task.description is not None:
+                text += f"Описание: {task.description}\n\n"
+
+            if task.answer is not None:
+                text += f"Правильный ответ: {task.answer}\n\n"
+
+            if task.hint is not None:
+                text += f"Подсказка: {task.hint}\n\n"
+
+            await message.answer(text)
 
 
 @router.message(F.text == "Задать дату старта")
