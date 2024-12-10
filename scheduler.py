@@ -12,9 +12,9 @@ from utils import get_results_message, create_report
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
 
-async def write_report(google_client, spreadsheet_url):
-    sheets = await create_report()
-    google_client.write_to_google_sheets(df_dict=sheets, spreadsheet_url=spreadsheet_url)
+async def write_report(google_sheets_client, google_drive_client, spreadsheet_url):
+    sheets = await create_report(drive_client=google_drive_client)
+    google_sheets_client.write_to_google_sheets(df_dict=sheets, spreadsheet_url=spreadsheet_url)
 
 
 async def get_free_tasks_for_user(old_user_tasks, all_tasks):

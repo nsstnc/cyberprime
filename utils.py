@@ -19,7 +19,7 @@ async def get_absolute_path(file_path):
     return abs_path
 
 
-async def create_report():
+async def create_report(drive_client):
     users = await database.get_all_users()
 
     data_points = []
@@ -45,8 +45,28 @@ async def create_report():
         'задание 3', 'задание 4', 'задание 5', 'итог'
     ])
 
+    distributed_tasks = await database.get_distributed_tasks()
+    data_tasks = []
+
+    for task in distributed_tasks:
+        if task.result_url:
+            # Загружаем файл в Google Drive и получаем публичный URL
+            public_url = drive_client.upload_file_to_drive(task.result_url, f"task_{task.id}.jpg")
+            answer = f'=IMAGE("{public_url}")'
+        else:
+            answer = task.user_answer
+
+        data = [task.id, task.user_id, task.points, task.day, answer]
+        data_tasks.append(data)
+
+    df_answers = pd.DataFrame(data_tasks, columns=[
+        'user_task_id', 'id пользователя', 'очки', 'день',
+        'ответ'
+    ])
+
     df_dict = {
-        "Баллы": df_points
+        "Баллы": df_points,
+        "Решения": df_answers,
     }
 
     return df_dict
