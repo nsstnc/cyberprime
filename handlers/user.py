@@ -11,7 +11,7 @@ from database.models import TaskType
 from keyboards.user_keyboards import *
 from utils import get_results_message, get_absolute_path, check_answer
 import os
-
+from config import GROUP_URLS
 router = Router()
 
 
@@ -182,6 +182,9 @@ async def set_fraction(callback_query: CallbackQuery):
     await database.register_user(callback_query.from_user.id, user_login, int(fraction_id))
 
     fraction = await database.get_fraction_by_id(int(fraction_id))
+    text = f"Ты вступил в фракцию {fraction.fraction_name}! Теперь ты сражаешься за свою честь и за свой город."
+    if GROUP_URLS[fraction.fraction_name]:
+        text += f"\nВступай в группу своей фракции по ссылке: {GROUP_URLS[fraction.fraction_name]}"
     await callback_query.message.answer(
-        f"Ты вступил в фракцию {fraction.fraction_name}! Теперь ты сражаешься за свою честь и за свой город.",
+        text,
         reply_markup=main_user_keyboard)
