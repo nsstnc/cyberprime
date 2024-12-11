@@ -70,3 +70,48 @@ async def create_report(drive_client):
     }
 
     return df_dict
+
+
+from rapidfuzz import fuzz
+import re
+from num2words import num2words
+
+
+def check_answer(user_answer, correct_answer):
+    def normalize_text(text):
+        text = re.sub(r'[“”"\'`]', '', text)  # Убираем кавычки
+        text = re.sub(r'[^\w\s]', '', text)  # Убираем лишние символы
+        text = text.strip().lower()
+        text = text.replace("ё", "e")
+        text = replace_numbers_with_words(text)
+        return text
+
+    def replace_numbers_with_words(input_string):
+        # Функция для замены чисел на слова
+        def replace_number(match):
+            number = int(match.group())
+            return num2words(number, lang='ru')
+
+        # Ищем все числа в строке и заменяем их на слова
+        result = re.sub(r'\b\d+\b', replace_number, input_string)
+        return result
+
+    def is_similar(user_answer, correct_answer, threshold=50):
+        # print(fuzz.ratio(user_answer, correct_answer))
+        if fuzz.ratio(user_answer, correct_answer) >= threshold:
+            return True
+        return False
+
+    user_input = normalize_text(user_answer)
+    # print(user_input)
+    correct_answers = normalize_text(correct_answer)
+    # print(correct_answers)
+    # Сначала проверяем точное совпадение
+    if user_input in correct_answers:
+        return True
+
+    # Затем проверяем на схожесть
+    if is_similar(user_input, correct_answers):
+        return True
+
+    return False

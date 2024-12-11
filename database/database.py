@@ -331,6 +331,7 @@ class Database:
                            Variant.image_url,
                            Variant.hint,
                            Task.type,
+                           Variant.answer,
                            UserTask.points,
                            UserTask.id.label("user_task_id"),
                            Variant.id.label("variant_id")
