@@ -119,18 +119,38 @@ class Database:
                 print(f"Error querying data: {e}")
                 return []
 
-    async def check_user_exists(self, login):
+    async def check_user_exists(self, login=None, tgid=None):
         async with self.get_async_session() as db:
-            try:
+            if login and not tgid:
+                try:
+                    stmt = select(User).filter(User.login == login)
+                    result = await db.execute(stmt)
+                    user = result.scalars().first()
+                    return user is not None
 
-                stmt = select(User).filter(User.login == login)
-                result = await db.execute(stmt)
-                user = result.scalars().first()
-                return user is not None
+                except SQLAlchemyError as e:
+                    print(f"Error querying data: {e}")
+                    return []
+            elif tgid and not login:
+                try:
+                    stmt = select(User).filter(User.tgid == tgid)
+                    result = await db.execute(stmt)
+                    user = result.scalars().first()
+                    return user is not None
 
-            except SQLAlchemyError as e:
-                print(f"Error querying data: {e}")
-                return []
+                except SQLAlchemyError as e:
+                    print(f"Error querying data: {e}")
+                    return []
+            elif tgid and login:
+                try:
+                    stmt = select(User).filter(User.tgid == tgid, User.login == login)
+                    result = await db.execute(stmt)
+                    user = result.scalars().first()
+                    return user is not None
+
+                except SQLAlchemyError as e:
+                    print(f"Error querying data: {e}")
+                    return []
 
     async def add_photohunting_task(self, description):
         async with self.get_async_session() as db:
@@ -455,7 +475,6 @@ class Database:
             except SQLAlchemyError as e:
                 await db.rollback()
                 print(f"Error querying data: {e}")
-
 
 
 database = Database()

@@ -15,7 +15,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from dotenv import load_dotenv
 from handlers import user, admin
 from config import ADMINS, PATH_TO_GOOGLE_SERVICE_SECRET_JSON, SPREADSHEET_URL
-from keyboards.user_keyboards import get_city_select_keyboard
+from keyboards.user_keyboards import get_city_select_keyboard, main_user_keyboard
 from keyboards.admin_keyboards import main_admin_keyboard
 from database.database import database
 from scheduler import scheduler, update_tasks, notificate_for_task_completion, notificate_for_fractions_result, \
@@ -48,6 +48,8 @@ class RegistrationStates(StatesGroup):
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     if message.from_user.id in ADMINS:
         await message.answer("Добро пожаловать, администратор!", reply_markup=main_admin_keyboard)
+    elif await database.check_user_exists(tgid=message.from_user.id):
+        await message.answer("С возвращением!", reply_markup=main_user_keyboard)
     else:
         await message.answer("Привет, странник! Добро пожаловать в наше приключение!")
         await message.answer("Введи свой логин или номер телефона в системе КиберПрайд:")
@@ -60,7 +62,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
 @dp.message(RegistrationStates.waiting_for_login, F.text)
 async def process_login(message: Message, state: FSMContext) -> None:
     login = message.text.strip()
-    user_exists = await database.check_user_exists(login)
+    user_exists = await database.check_user_exists(login=login)
 
     if user_exists:
         await message.answer(f"Такой логин уже зарегистрирован")
