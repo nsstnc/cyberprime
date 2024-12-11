@@ -78,13 +78,11 @@ from num2words import num2words
 
 
 def check_answer(user_answer, correct_answer):
-    def normalize_text(text):
-        text = re.sub(r'[“”"\'`]', '', text)  # Убираем кавычки
-        text = re.sub(r'[^\w\s]', '', text)  # Убираем лишние символы
-        text = text.strip().lower()
-        text = text.replace("ё", "e")
-        text = replace_numbers_with_words(text)
-        return text
+    """
+    Проверяет ответ на совпадение и возвращает количество очков
+    """
+    correct_points = 15
+    mistakes_points = 10
 
     def replace_numbers_with_words(input_string):
         # Функция для замены чисел на слова
@@ -96,22 +94,32 @@ def check_answer(user_answer, correct_answer):
         result = re.sub(r'\b\d+\b', replace_number, input_string)
         return result
 
-    def is_similar(user_answer, correct_answer, threshold=50):
-        # print(fuzz.ratio(user_answer, correct_answer))
-        if fuzz.ratio(user_answer, correct_answer) >= threshold:
-            return True
-        return False
+    def normalize_text(text):
+        text = re.sub(r'[“”"\'`]', '', text)  # Убираем кавычки
+        text = re.sub(r'[^\w\s]', '', text)  # Убираем лишние символы
+        text = text.strip().lower()
+        text = text.replace("ё", "e")
+        text = replace_numbers_with_words(text)
+        return text
+
+    def get_points(user_answer, correct_answer, threshold=50):
+        # print(threshold)
+        match = fuzz.ratio(user_answer, correct_answer)
+        # print(match)
+        if match >= threshold:
+            if match < 75:
+                return True, mistakes_points
+            elif match >= 75:
+                return True, correct_points
+        return False, 0
 
     user_input = normalize_text(user_answer)
     # print(user_input)
-    correct_answers = normalize_text(correct_answer)
-    # print(correct_answers)
-    # Сначала проверяем точное совпадение
-    if user_input in correct_answers:
-        return True
+    correct_answer = normalize_text(correct_answer)
+    # print(correct_answer)
 
-    # Затем проверяем на схожесть
-    if is_similar(user_input, correct_answers):
-        return True
+    is_similar, points = get_points(user_input, correct_answer)
 
-    return False
+    return points
+
+

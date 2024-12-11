@@ -68,9 +68,8 @@ async def answer_step2(message: Message, state: FSMContext) -> None:
                 # ожидаем текст
                 answer = message.text.strip()
                 # проверяем ответ на правильность
-                if check_answer(answer, current_task.answer):
-                    # начисляем пользователю баллы
-                    await database.add_points(current_task.user_task_id, 20)
+                # начисляем пользователю баллы
+                await database.add_points(current_task.user_task_id, check_answer(answer, current_task.answer))
 
             await database.set_user_answer(current_task.user_task_id, answer, result_url)
 
